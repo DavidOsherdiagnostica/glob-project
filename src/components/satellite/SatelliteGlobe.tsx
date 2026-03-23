@@ -78,9 +78,9 @@ export default function SatelliteGlobe({
       // High-res Esri World Imagery (satellite photo tiles, free, no API key)
       let baseImagery: CesiumType.ImageryLayer;
       try {
-        const esri = new Cesium.ArcGisMapServerImageryProvider({
-          url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
-        });
+        const esri = await Cesium.ArcGisMapServerImageryProvider.fromUrl(
+          'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+        );
         baseImagery = new Cesium.ImageryLayer(esri);
       } catch {
         // fallback to bundled NaturalEarthII
