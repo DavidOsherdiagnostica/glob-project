@@ -1,0 +1,388 @@
+/* ========================================
+   ORBITAL-WATCH — Cyberpunk Design System
+   ======================================== */
+
+.satellite-root {
+  --cyber-bg: #020014;
+  --cyber-bg-2: #08001f;
+  --cyber-bg-3: #10002e;
+  --cyber-bg-panel: rgba(8, 0, 31, 0.88);
+  --cyber-cyan: #00ffff;
+  --cyber-cyan-dim: rgba(0, 255, 255, 0.15);
+  --cyber-cyan-mid: rgba(0, 255, 255, 0.4);
+  --cyber-violet: #7b00ff;
+  --cyber-violet-dim: rgba(123, 0, 255, 0.2);
+  --cyber-magenta: #ff00ff;
+  --cyber-green: #00ff88;
+  --cyber-green-dim: rgba(0, 255, 136, 0.15);
+  --cyber-orange: #ff8800;
+  --cyber-red: #ff0040;
+  --cyber-yellow: #ffe600;
+  --cyber-text: #c0e8ff;
+  --cyber-text-dim: #4a6a8a;
+  --cyber-text-bright: #e8f4ff;
+  --cyber-border: rgba(0, 255, 255, 0.2);
+  --cyber-border-bright: rgba(0, 255, 255, 0.5);
+  --cyber-glow-sm: 0 0 8px rgba(0, 255, 255, 0.4);
+  --cyber-glow: 0 0 15px rgba(0, 255, 255, 0.35), 0 0 40px rgba(0, 255, 255, 0.1);
+  --cyber-glow-lg: 0 0 25px rgba(0, 255, 255, 0.5), 0 0 60px rgba(0, 255, 255, 0.2);
+  --font-orbitron: var(--font-orbitron, 'Orbitron', sans-serif);
+  --font-mono: var(--font-mono, 'JetBrains Mono', monospace);
+
+  /* Satellite layer colors */
+  --layer-iss: #ff6600;
+  --layer-active: #00ffff;
+  --layer-starlink: #7b00ff;
+  --layer-gps: #00ff88;
+  --layer-glonass: #ffe600;
+  --layer-beidou: #ff8800;
+  --layer-weather: #00aaff;
+  --layer-oneweb: #ff00ff;
+  --layer-debris: #ff0040;
+
+  background: var(--cyber-bg);
+  color: var(--cyber-text);
+  font-family: var(--font-mono), monospace;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* ---- Scanline overlay ---- */
+.satellite-root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+  animation: scanline-drift 12s linear infinite;
+}
+
+@keyframes scanline-drift {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100px; }
+}
+
+/* ---- Panel base ---- */
+.cyber-panel {
+  background: var(--cyber-bg-panel);
+  border: 1px solid var(--cyber-border);
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+}
+
+.cyber-panel::before,
+.cyber-panel::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: var(--cyber-cyan);
+  border-style: solid;
+  z-index: 1;
+}
+
+.cyber-panel::before {
+  top: -1px;
+  left: -1px;
+  border-width: 2px 0 0 2px;
+}
+
+.cyber-panel::after {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 2px 2px 0;
+}
+
+.cyber-panel-glow {
+  box-shadow: var(--cyber-glow-sm), inset 0 0 30px rgba(0, 255, 255, 0.03);
+}
+
+/* ---- Headings ---- */
+.cyber-heading {
+  font-family: var(--font-orbitron), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--cyber-cyan);
+  text-shadow: 0 0 10px var(--cyber-cyan), 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+/* ---- Data label ---- */
+.cyber-label {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--cyber-text-dim);
+}
+
+.cyber-value {
+  font-family: var(--font-mono), monospace;
+  color: var(--cyber-text-bright);
+  font-variant-numeric: tabular-nums;
+}
+
+.cyber-value-highlight {
+  color: var(--cyber-cyan);
+  text-shadow: 0 0 6px var(--cyber-cyan);
+}
+
+/* ---- Toggle switch ---- */
+.cyber-toggle {
+  position: relative;
+  width: 36px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.cyber-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.cyber-toggle-track {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  border-radius: 2px;
+  border: 1px solid var(--cyber-border);
+  background: var(--cyber-bg-3);
+  transition: all 0.2s;
+}
+
+.cyber-toggle input:checked + .cyber-toggle-track {
+  background: var(--cyber-cyan-dim);
+  border-color: var(--cyber-cyan);
+  box-shadow: 0 0 6px var(--cyber-cyan);
+}
+
+.cyber-toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  background: var(--cyber-text-dim);
+  border-radius: 1px;
+  transition: all 0.2s;
+}
+
+.cyber-toggle input:checked + .cyber-toggle-track::after {
+  transform: translateX(18px);
+  background: var(--cyber-cyan);
+  box-shadow: 0 0 6px var(--cyber-cyan);
+}
+
+/* ---- Scrollbar ---- */
+.cyber-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--cyber-border-bright) transparent;
+}
+
+.cyber-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.cyber-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cyber-scroll::-webkit-scrollbar-thumb {
+  background: var(--cyber-border-bright);
+  border-radius: 2px;
+}
+
+/* ---- Animated border shimmer ---- */
+@keyframes border-shimmer {
+  0%, 100% { border-color: var(--cyber-border); }
+  50% { border-color: var(--cyber-border-bright); }
+}
+
+.cyber-panel-active {
+  animation: border-shimmer 2s ease-in-out infinite;
+}
+
+/* ---- Blink animation ---- */
+@keyframes cyber-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.cyber-blink {
+  animation: cyber-blink 1.5s ease-in-out infinite;
+}
+
+/* ---- Pulse dot ---- */
+@keyframes pulse-dot {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.pulse-dot {
+  position: relative;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  animation: pulse-dot 1.5s ease-out infinite;
+}
+
+/* ---- Cesium globe overrides ---- */
+.cesium-widget,
+.cesium-widget canvas {
+  width: 100% !important;
+  height: 100% !important;
+  outline: none !important;
+}
+
+.cesium-widget-credits {
+  display: none !important;
+}
+
+/* ---- Slider ---- */
+.cyber-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  background: var(--cyber-bg-3);
+  border: 1px solid var(--cyber-border);
+  outline: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+.cyber-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: var(--cyber-cyan);
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--cyber-cyan);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.cyber-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: var(--cyber-cyan);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--cyber-cyan);
+}
+
+/* ---- Loader ---- */
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.radar-sweep {
+  animation: radar-sweep 2s linear infinite;
+  transform-origin: center bottom;
+}
+
+/* ---- Tab ---- */
+.cyber-tab {
+  font-family: var(--font-orbitron), sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--cyber-text-dim);
+  background: transparent;
+}
+
+.cyber-tab:hover {
+  color: var(--cyber-text);
+  border-color: var(--cyber-border);
+}
+
+.cyber-tab.active {
+  color: var(--cyber-cyan);
+  border-color: var(--cyber-cyan);
+  background: var(--cyber-cyan-dim);
+  text-shadow: 0 0 6px var(--cyber-cyan);
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
+}
+
+/* ---- Button ---- */
+.cyber-btn {
+  font-family: var(--font-orbitron), sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border: 1px solid var(--cyber-border);
+  background: transparent;
+  color: var(--cyber-text);
+  cursor: pointer;
+  transition: all 0.15s;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+}
+
+.cyber-btn:hover {
+  border-color: var(--cyber-cyan);
+  color: var(--cyber-cyan);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  background: var(--cyber-cyan-dim);
+}
+
+.cyber-btn-primary {
+  border-color: var(--cyber-cyan);
+  color: var(--cyber-cyan);
+  background: var(--cyber-cyan-dim);
+  text-shadow: 0 0 6px var(--cyber-cyan);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+}
+
+/* ---- Kp gauge colors ---- */
+.kp-quiet { color: var(--cyber-green); }
+.kp-unsettled { color: #88ff00; }
+.kp-active { color: var(--cyber-yellow); }
+.kp-minor-storm { color: var(--cyber-orange); }
+.kp-major-storm { color: var(--cyber-red); }
+.kp-severe-storm { color: var(--cyber-magenta); }
+
+/* ---- Input ---- */
+.cyber-input {
+  background: var(--cyber-bg-3);
+  border: 1px solid var(--cyber-border);
+  color: var(--cyber-text);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+
+.cyber-input:focus {
+  border-color: var(--cyber-cyan);
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
+}
+
+.cyber-input::placeholder {
+  color: var(--cyber-text-dim);
+}
