@@ -5,9 +5,9 @@ import { useSatellite, LAYER_ORDER, LAYER_CONFIGS } from './SatelliteContext';
 export default function LayerPanel() {
   const { layers, dispatch, showOrbits, setShowOrbits } = useSatellite();
 
-  const totalSats = LAYER_ORDER.reduce((sum, id) => sum + layers[id].count, 0);
+  const totalSats = LAYER_ORDER.reduce((sum, id) => sum + (layers[id].count ?? 0), 0);
   const enabledSats = LAYER_ORDER.filter((id) => layers[id].enabled).reduce(
-    (sum, id) => sum + layers[id].count,
+    (sum, id) => sum + (layers[id].count ?? 0),
     0
   );
 
@@ -52,6 +52,8 @@ export default function LayerPanel() {
               enabled={state.enabled}
               count={state.count}
               loaded={state.loaded}
+              loading={state.loading}
+              error={state.error}
               onToggle={() => dispatch({ type: 'TOGGLE_LAYER', id })}
             />
           );
@@ -111,6 +113,8 @@ function LayerRow({
   enabled,
   count,
   loaded,
+  loading,
+  error,
   onToggle,
 }: {
   id: string;
@@ -119,8 +123,17 @@ function LayerRow({
   enabled: boolean;
   count: number;
   loaded: boolean;
+  loading: boolean;
+  error: boolean;
   onToggle: () => void;
 }) {
+  const badge = () => {
+    if (loading) return <LoadingDots />;
+    if (error) return <span style={{ color: 'var(--cyber-red)', fontSize: '0.55rem' }}>ERR</span>;
+    if (loaded) return count.toLocaleString();
+    return null;
+  };
+
   return (
     <div
       style={{
@@ -130,7 +143,7 @@ function LayerRow({
         padding: '6px 14px',
         cursor: 'pointer',
         transition: 'background 0.1s',
-        borderLeft: `2px solid ${enabled ? color : 'transparent'}`,
+        borderLeft: `2px solid ${enabled ? (error ? 'var(--cyber-red)' : color) : 'transparent'}`,
         background: enabled ? `rgba(${hexToRgb(color)}, 0.05)` : 'transparent',
       }}
       onClick={onToggle}
@@ -141,9 +154,9 @@ function LayerRow({
           width: '8px',
           height: '8px',
           borderRadius: '50%',
-          background: enabled ? color : 'var(--cyber-bg-3)',
-          border: `1px solid ${color}`,
-          boxShadow: enabled ? `0 0 6px ${color}` : 'none',
+          background: error ? 'var(--cyber-red)' : enabled ? color : 'var(--cyber-bg-3)',
+          border: `1px solid ${error ? 'var(--cyber-red)' : color}`,
+          boxShadow: enabled && !error ? `0 0 6px ${color}` : 'none',
           flexShrink: 0,
           transition: 'all 0.2s',
         }}
@@ -156,14 +169,14 @@ function LayerRow({
           fontSize: '0.72rem',
           fontFamily: 'var(--font-orbitron)',
           letterSpacing: '0.08em',
-          color: enabled ? 'var(--cyber-text-bright)' : 'var(--cyber-text-dim)',
+          color: error ? 'var(--cyber-red)' : enabled ? 'var(--cyber-text-bright)' : 'var(--cyber-text-dim)',
           transition: 'color 0.2s',
         }}
       >
         {label}
       </span>
 
-      {/* Count badge */}
+      {/* Count / status badge */}
       <span
         style={{
           fontSize: '0.6rem',
@@ -173,7 +186,7 @@ function LayerRow({
           textAlign: 'right',
         }}
       >
-        {loaded ? count.toLocaleString() : <LoadingDots />}
+        {badge()}
       </span>
 
       {/* Toggle */}

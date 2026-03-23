@@ -73,16 +73,28 @@ export default function SatelliteGlobe({
       const ionToken = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN;
       if (ionToken) Cesium.Ion.defaultAccessToken = ionToken;
 
-      // Build base imagery layer using Natural Earth II (bundled with Cesium)
-      const tms = await Cesium.TileMapServiceImageryProvider.fromUrl(
-        Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII'),
-        { fileExtension: 'jpg' }
-      );
+      if (destroyed || !containerRef.current) return;
+
+      // High-res Esri World Imagery (satellite photo tiles, free, no API key)
+      let baseImagery: CesiumType.ImageryLayer;
+      try {
+        const esri = new Cesium.ArcGisMapServerImageryProvider({
+          url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+        });
+        baseImagery = new Cesium.ImageryLayer(esri);
+      } catch {
+        // fallback to bundled NaturalEarthII
+        const tms = await Cesium.TileMapServiceImageryProvider.fromUrl(
+          Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII'),
+          { fileExtension: 'jpg' }
+        );
+        baseImagery = new Cesium.ImageryLayer(tms);
+      }
 
       if (destroyed || !containerRef.current) return;
 
       const viewer = new Cesium.Viewer(containerRef.current, {
-        baseLayer: new Cesium.ImageryLayer(tms),
+        baseLayer: baseImagery,
         baseLayerPicker: false,
         geocoder: false,
         homeButton: false,
@@ -108,7 +120,10 @@ export default function SatelliteGlobe({
 
       viewer.scene.globe.enableLighting = true;
       viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString('#020014');
+      viewer.scene.globe.maximumScreenSpaceError = 1.5; // sharper textures (default = 2)
       viewer.scene.backgroundColor = Cesium.Color.fromCssColorString('#020014');
+      // Match device pixel ratio for crisp rendering on HiDPI/Retina screens
+      viewer.resolutionScale = window.devicePixelRatio ?? 1;
       if (viewer.scene.skyAtmosphere) {
         viewer.scene.skyAtmosphere.show = true;
         viewer.scene.skyAtmosphere.atmosphereLightIntensity = 4.0;
@@ -330,13 +345,19 @@ export default function SatelliteGlobe({
     Cesium: typeof CesiumType,
     viewer: CesiumType.Viewer
   ) {
+    dispatch({ type: 'SET_LAYER_LOADING', id });
     fetch(`/api/satellite/tle?group=${id}`)
       .then((r) => r.json())
-      .then((records: TLERecord[]) => {
+      .then((data: unknown) => {
+        if (!Array.isArray(data)) {
+          dispatch({ type: 'SET_LAYER_ERROR', id });
+          return;
+        }
+        const records = data as TLERecord[];
         dispatch({ type: 'SET_LAYER_DATA', id, records });
         renderLayer(id, records, Cesium, viewer);
       })
-      .catch(console.error);
+      .catch(() => dispatch({ type: 'SET_LAYER_ERROR', id }));
   }
 
   function renderLayer(

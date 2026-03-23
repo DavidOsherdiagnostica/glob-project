@@ -47,6 +47,8 @@ interface LayerState {
   enabled: boolean;
   count: number;
   loaded: boolean;
+  loading: boolean;
+  error: boolean;
   records: TLERecord[];
 }
 
@@ -55,12 +57,14 @@ type LayersMap = Record<SatelliteLayerId, LayerState>;
 type Action =
   | { type: 'TOGGLE_LAYER'; id: SatelliteLayerId }
   | { type: 'SET_LAYER_DATA'; id: SatelliteLayerId; records: TLERecord[] }
+  | { type: 'SET_LAYER_LOADING'; id: SatelliteLayerId }
+  | { type: 'SET_LAYER_ERROR'; id: SatelliteLayerId }
   | { type: 'SET_ALL_ENABLED'; enabled: boolean };
 
 function initialLayerState(): LayersMap {
   const map = {} as LayersMap;
   for (const id of LAYER_ORDER) {
-    map[id] = { enabled: id === 'iss' || id === 'active', count: 0, loaded: false, records: [] };
+    map[id] = { enabled: id === 'iss' || id === 'active', count: 0, loaded: false, loading: false, error: false, records: [] };
   }
   return map;
 }
@@ -69,16 +73,24 @@ function layersReducer(state: LayersMap, action: Action): LayersMap {
   switch (action.type) {
     case 'TOGGLE_LAYER':
       return { ...state, [action.id]: { ...state[action.id], enabled: !state[action.id].enabled } };
-    case 'SET_LAYER_DATA':
+    case 'SET_LAYER_LOADING':
+      return { ...state, [action.id]: { ...state[action.id], loading: true, error: false } };
+    case 'SET_LAYER_ERROR':
+      return { ...state, [action.id]: { ...state[action.id], loading: false, error: true, loaded: true } };
+    case 'SET_LAYER_DATA': {
+      const records = Array.isArray(action.records) ? action.records : [];
       return {
         ...state,
         [action.id]: {
           ...state[action.id],
-          records: action.records,
-          count: action.records.length,
+          records,
+          count: records.length,
           loaded: true,
+          loading: false,
+          error: false,
         },
       };
+    }
     case 'SET_ALL_ENABLED': {
       const next = { ...state };
       for (const id of LAYER_ORDER) {

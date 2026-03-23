@@ -17,14 +17,36 @@ export const CELESTRAK_GROUPS: Record<SatelliteLayerId, string> = {
 /**
  * Fetch TLE/GP data from CelesTrak for a given layer.
  * Returns array of GP records with TLE_LINE1/TLE_LINE2.
+ * Retries up to 3 times with a 10 s timeout per attempt.
  */
 export async function fetchCelesTrakGroup(layerId: SatelliteLayerId): Promise<TLERecord[]> {
   const url = CELESTRAK_GROUPS[layerId];
-  const res = await fetch(url, { next: { revalidate: 900 } }); // 15-min cache
-  if (!res.ok) throw new Error(`CelesTrak fetch failed: ${res.status}`);
+  const TIMEOUT_MS = 10_000;
+  const MAX_ATTEMPTS = 3;
 
-  const data: CelesTrakGPRecord[] = await res.json();
-  return data.map(convertGPToTLE);
+  let lastError: Error | undefined;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+      const res = await fetch(url, {
+        signal: controller.signal,
+        next: { revalidate: 900 },
+      });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error(`CelesTrak fetch failed: ${res.status}`);
+      const data: CelesTrakGPRecord[] = await res.json();
+      if (!Array.isArray(data)) throw new Error('CelesTrak returned non-array response');
+      return data.map(convertGPToTLE);
+    } catch (err) {
+      clearTimeout(timer);
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (attempt < MAX_ATTEMPTS - 1) {
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+      }
+    }
+  }
+  throw lastError;
 }
 
 interface CelesTrakGPRecord {
